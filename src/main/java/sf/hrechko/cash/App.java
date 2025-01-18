@@ -4,6 +4,11 @@ public class App
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+        ConsoleUI cli = new ConsoleUI();
+        
+        do {
+        	cli.draw();
+        }while(cli.input());
+        System.out.println("Приложение закрыто!");
     }
 }
