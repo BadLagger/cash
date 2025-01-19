@@ -4,7 +4,7 @@ public class App
 {
     public static void main( String[] args )
     {
-        ConsoleUI cli = new ConsoleUI();
+        ConsoleUI cli = ConsoleUI.getCLI();
         
         do {
         	cli.draw();
