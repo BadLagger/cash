@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class FileDb {
 
-	private File file;
+	protected File file;
 	private byte[] data;
 
 	public FileDb(String filePath) {
@@ -34,17 +34,16 @@ public class FileDb {
 			out.close();
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
 	}
 	
-	String getStr() {
+	public String getStr() {
 		return new String(data);
 	}
 	
-	void setStr(String strData) {
+	public void setStr(String strData) {
 		data = strData.getBytes();
 	}
 }
