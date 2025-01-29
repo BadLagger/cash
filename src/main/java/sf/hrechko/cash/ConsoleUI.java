@@ -151,6 +151,18 @@ public class ConsoleUI {
 	}
 
     }
+    
+    private enum StandartMenuStates {
+	ENTER_LOGIN,
+	READ_LOGIN,
+	ENTER_PWD,
+	READ_PWD,
+	RETURN_TO_MAIN_MENU,
+	USER_DB_ERROR,
+	USER_NOT_FOUND,
+	PSWD_ERROR,
+	USER_EXISTS;
+    }
 
     /* Тело основного класса: Singletone */
     private static Menu currentMenu;
@@ -239,46 +251,38 @@ public class ConsoleUI {
 
 	return new Menu(MenuId.AUTORIZATION_MENU) {
 
-	    private final int ENTER_LOGIN = 0;
-	    private final int READ_LOGIN = 1;
-	    private final int ENTER_PWD = 2;
-	    private final int READ_PWD = 3;
-	    private final int RETURN_TO_MAIN_MENU = 4;
-	    private final int USER_DB_ERROR = 5;
-	    private final int USER_NOT_FOUND = 6;
-	    private final int PSWD_ERROR = 7;
-
-	    private int state = 0;
+	    private StandartMenuStates state = StandartMenuStates.ENTER_LOGIN;
 	    private User user = null;
 
 	    @Override
 	    public void draw() {
 		
 		if (userDb == null)
-		    state = USER_DB_ERROR;
+		    state = StandartMenuStates.USER_DB_ERROR;
 		
 		switch (state) {
 		case ENTER_LOGIN:
 		    drawHeader();
 		    System.out.format("Введите логин: ");
-		    state = READ_LOGIN;
+		    state = StandartMenuStates.READ_LOGIN;
 		    break;
 		case ENTER_PWD:
 		    System.out.format("Введите пароль: ");
-		    state = READ_PWD;
+		    state = StandartMenuStates.READ_PWD;
 		    break;
 		case USER_DB_ERROR:
 		    System.out.println("Ошибка подключения к БД пользователей!");
-		    state = RETURN_TO_MAIN_MENU;
+		    state = StandartMenuStates.RETURN_TO_MAIN_MENU;
 		    break;
 		case USER_NOT_FOUND:
 		    System.out.println("Пользователь с таким именем не найден!");
-		    state = RETURN_TO_MAIN_MENU;
+		    state = StandartMenuStates.RETURN_TO_MAIN_MENU;
 		    break;
 		case PSWD_ERROR:
 		    System.out.println("Неверный пароль!");
-		    state = RETURN_TO_MAIN_MENU;
+		    state = StandartMenuStates.RETURN_TO_MAIN_MENU;
 		    break;
+		default:;
 		}
 	    }
 
@@ -287,7 +291,7 @@ public class ConsoleUI {
 		switch (state) {
 		case READ_LOGIN:
 		    String login = inputSrc.next();
-		    state = (userDb.isUserPresent(login)) ? ENTER_PWD : USER_NOT_FOUND;
+		    state = (userDb.isUserPresent(login)) ? StandartMenuStates.ENTER_PWD : StandartMenuStates.USER_NOT_FOUND;
 		    user = userDb.getUser(login);
 		    break;
 		case READ_PWD:
@@ -296,13 +300,14 @@ public class ConsoleUI {
 			ConsoleUI.getCLI().setCurrentUser(user);
 			ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_MAIN_MENU);
 		    } else {
-			state = PSWD_ERROR;
+			state = StandartMenuStates.PSWD_ERROR;
 		    }
 		    break;
 		case RETURN_TO_MAIN_MENU:
-		    state = ENTER_LOGIN;
+		    state = StandartMenuStates.ENTER_LOGIN;
 		    ConsoleUI.getCLI().setMenuById(MenuId.ENTER_MENU);
 		    break;
+		default:;
 		}
 		return true;
 	    }
@@ -311,7 +316,46 @@ public class ConsoleUI {
     }
 
     private Menu createRegistrationMenu() {
-	int order = 1;
+	return new Menu(MenuId.REGISTRATION_MENU) {
+	    
+	    String userName = "";
+	    private StandartMenuStates state = StandartMenuStates.ENTER_LOGIN;
+	    
+	    @Override
+	    public void draw() {
+		if (userDb == null)
+		    state = StandartMenuStates.USER_DB_ERROR;
+		switch(state) {
+		case ENTER_LOGIN:
+		    drawHeader();
+		    System.out.format("Введите логин: ");
+		    state = StandartMenuStates.READ_LOGIN;
+		case USER_DB_ERROR:
+		    System.out.println("Ошибка подключения к БД пользователей!");
+		    state = StandartMenuStates.RETURN_TO_MAIN_MENU;
+		    break;
+		}
+	    }
+
+	    @Override
+	    public boolean input(Scanner inputSrc) {
+		switch(state) {
+		case READ_LOGIN:
+		    String login = inputSrc.next();
+		    if (userDb.isUserPresent(login)) {
+			state = StandartMenuStates.USER_EXISTS;
+		    } else {
+			userName = login;
+			state = StandartMenuStates.ENTER_PWD;
+		    }
+		    
+		    break;
+		}
+		return true;
+	    }
+	    
+	};
+	/*int order = 1;
 	MenuElement[] elements = { new MenuElement(order++, "Назад") {
 	    @Override
 	    public Action action() {
@@ -324,7 +368,7 @@ public class ConsoleUI {
 	    }
 	}, };
 
-	return new ChooseMenu(MenuId.REGISTRATION_MENU, elements);
+	return new ChooseMenu(MenuId.REGISTRATION_MENU, elements);*/
     }
 
 }
