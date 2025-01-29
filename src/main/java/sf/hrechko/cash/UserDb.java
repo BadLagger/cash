@@ -57,6 +57,7 @@ public class UserDb extends FileDb {
 	if (!load()) {
 	    if (!file.exists())
 		try {
+		    System.out.format("Создать ");
 		    file.createNewFile();
 		    setStr("{}");
 		    if(!save())

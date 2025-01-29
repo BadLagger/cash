@@ -21,7 +21,8 @@ public class FileDb {
 			input.close();
 			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+		    System.out.format("Файл %s не найден!\n", file.getName());
 		}
 		return false;
 	}

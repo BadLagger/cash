@@ -6,6 +6,10 @@ public class App
     {
         ConsoleUI cli = ConsoleUI.getCLI();
         
+        if(!cli.connectToDb("users.db")) {
+            System.out.println("Ошибка подключения к БД пользователей!");
+        }
+        
         do {
         	cli.draw();
         }while(cli.input());
