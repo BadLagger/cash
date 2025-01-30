@@ -91,6 +91,12 @@ public class ConsoleUI {
 			System.out.println(getId().getStr());
 			drawDelimeter();
 		}
+		
+		protected void drawHeader(String additionalStr) {
+			drawDelimeter();
+			System.out.format("%s %s\n", getId().getStr(), additionalStr);
+			drawDelimeter();
+		}
 	}
 
 	private class ChooseMenu extends Menu {
