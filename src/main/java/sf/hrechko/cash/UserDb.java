@@ -1,7 +1,10 @@
 package sf.hrechko.cash;
 
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,36 +17,46 @@ public class UserDb extends FileDb {
 	public class CashCategory {
 		private String name;
 		private double value;
+		private boolean erasable = true;
 
-		CashCategory() {
+		public CashCategory() {
 			name = "";
 			value = 0;
 		}
 
-		CashCategory(String name) {
+		public CashCategory(String name) {
 			this.name = name;
 			value = 0;
 		}
 
-		CashCategory(String name, double value) {
+		public CashCategory(String name, double value) {
 			this.name = name;
 			this.value = value;
 		}
 
-		String getName() {
+		public String getName() {
 			return name;
 		}
 
-		double getValue() {
+		public double getValue() {
 			return value;
 		}
 
-		void setValue(double val) {
+		public void setValue(double val) {
 			value = val;
 		}
 
-		String getJsonStr() {
+		public String getJsonStr() {
 			return String.format("\"%s\": \"%.02f\"", name, value);
+		}
+		
+		public CashCategory setErasable(boolean state) {
+			erasable = state;
+			return this;
+		}
+		
+		public boolean isErasable() {
+			return erasable;
 		}
 	}
 
@@ -54,10 +67,10 @@ public class UserDb extends FileDb {
 		private Set<CashCategory> spending = new HashSet<>(); // расход
 
 		private void createDefaultCashCategories() {
-			revenue.add(new CashCategory("Пополнение"));
-			revenue.add(new CashCategory("Перевод"));
-			spending.add(new CashCategory("Снятие"));
-			spending.add(new CashCategory("Перевод"));
+			revenue.add(new CashCategory("Пополнение").setErasable(false));
+			revenue.add(new CashCategory("Перевод").setErasable(false));
+			spending.add(new CashCategory("Снятие").setErasable(false));
+			spending.add(new CashCategory("Перевод").setErasable(false));
 		}
 
 		private CashCategory getCategoryFromSet(String name, Set<CashCategory> set) {
@@ -111,16 +124,30 @@ public class UserDb extends FileDb {
 			}
 			return true;
 		}
+		
+		public boolean deleteIncome(CashCategory cash) {
+			CashCategory foundCategory = getIncomeByName(cash.getName());
+			if (foundCategory == null)
+				return false;
+			return revenue.remove(foundCategory);
+		}
 
 		public boolean setOutcome(CashCategory cash) {
 			CashCategory foundCategory = getOutcomeByName(cash.getName());
 			if (foundCategory == null)
-				return revenue.add(cash);
+				return spending.add(cash);
 			else {
 				var currentValue = foundCategory.getValue() + cash.getValue();
 				foundCategory.setValue(currentValue);
 			}
 			return true;
+		}
+		
+		public boolean deleteOutcome(CashCategory cash) {
+			CashCategory foundCategory = getOutcomeByName(cash.getName());
+			if (foundCategory == null)
+				return false;
+			return spending.remove(foundCategory);
 		}
 
 		public CashCategory getIncomeByName(String name) {
@@ -176,7 +203,7 @@ public class UserDb extends FileDb {
 			count = 0;
 			for (var sp : spending) {
 				outStr += String.format("%s", sp.getJsonStr());
-				if (++count < revenue.size())
+				if (++count < spending.size())
 					outStr += ",";
 			}
 			outStr += "}}";
@@ -196,7 +223,6 @@ public class UserDb extends FileDb {
 		if (!load()) {
 			if (!file.exists())
 				try {
-					System.out.format("Создать ");
 					file.createNewFile();
 					setStr("{}");
 					if (!save())
@@ -267,15 +293,21 @@ public class UserDb extends FileDb {
 				var revCategories = revenue.fieldNames();
 				while (revCategories.hasNext()) {
 					String revName = revCategories.next();
-					double revValue = revenue.get(revName).asDouble();
-					user.setIncome(new CashCategory(revName, revValue));
+					var revValue = revenue.get(revName).asText();
+					if (revValue.contains(",")) {
+						revValue = revValue.replaceAll(",", ".");
+					}
+					user.setIncome(new CashCategory(revName, Double.valueOf(revValue)));
 				}
 				var spending = userData.get("spending");
 				var spCategories = spending.fieldNames();
 				while (spCategories.hasNext()) {
 					String spName = spCategories.next();
-					double spValue = spending.get(spName).asDouble();
-					user.setOutcome(new CashCategory(spName, spValue));
+					var spValue = spending.get(spName).asText();
+					if (spValue.contains(",")) {
+						spValue = spValue.replaceAll(",", ".");
+					}
+					user.setOutcome(new CashCategory(spName, Double.valueOf(spValue)));
 				}
 				userList.add(user);
 			}
