@@ -403,20 +403,41 @@ public class ConsoleUI {
 	}
 	
 	private Menu createAccountMenu() {
-		int order = 1;
-		MenuElement[] elements = {  new MenuElement(order++, "Вернуться в главное меню") {
+		return new Menu(MenuId.ACCOUNT_MAIN_MENU) {
+
 			@Override
-			public Action action() {
-				return Action.CHANGE_MENU_ACTION;
+			public void draw() {
+				drawHeader(currentUser.getLogin());
+				System.out.format("Баланс: %.02f руб.\n\n", currentUser.getBalance());
+				System.out.println("1. Доходы.");
+				System.out.println("2. Расходы.");
+				System.out.println("3. Выйти из аккаунта.\n");
+				System.out.format("Введите число соответствующее пункту меню: ");
+			}
+
+			@Override
+			public boolean input(Scanner inputSrc) {
+				String input = inputSrc.next();
+				System.out.println();
+				if (input.length() == 1) {
+					char inputCh = input.charAt(0);
+					if (Character.isDigit(inputCh)) {
+						switch(inputCh) {
+						case '1':
+							break;
+						case '2':
+							break;
+						case '3':
+							ConsoleUI.getCLI().setMenuById(MenuId.ENTER_MENU);
+							return true;
+						}
+					}
+				}
+				System.out.println("Ошибка ввода!");
+				return true;
 			}
 			
-			@Override
-			public MenuId changeMenu() {
-				return MenuId.ENTER_MENU;
-			}
-		}, };
-
-		return new ChooseMenu(MenuId.ACCOUNT_MAIN_MENU, elements);
+		};
 	}
 
 }
