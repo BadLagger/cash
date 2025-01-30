@@ -291,6 +291,7 @@ public class ConsoleUI {
 					if (user.checkPassword(passwd)) {
 						ConsoleUI.getCLI().setCurrentUser(user);
 						ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_MAIN_MENU);
+						state = StandartMenuStates.ENTER_LOGIN;
 					} else {
 						state = StandartMenuStates.PSWD_ERROR;
 					}
