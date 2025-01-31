@@ -17,6 +17,7 @@ public class ConsoleUI {
 		ACCOUNT_REVENUE_MENU("Доходы пользователя"), 
 		ACCOUNT_SPENDING_MENU("Расходы пользователя"),
 		ACCOUNT_REFILL("Пополнение баланса пользователя"),
+		ACCOUNT_WITHDRAWAL("Трата баланса пользователя"),
 		EMPTY_MENU("");
 
 		private String menuStr;
@@ -178,7 +179,7 @@ public class ConsoleUI {
 
 	private ConsoleUI() {
 		currentMenu = createMainMenu();
-		allMenu = new Menu[] { currentMenu, createAutorizationMenu(), createRegistrationMenu(), createAccountMenu(), createRevenueMenu(), createAccountRefillMenu()};
+		allMenu = new Menu[] { currentMenu, createAutorizationMenu(), createRegistrationMenu(), createAccountMenu(), createRevenueMenu(), createAccountRefillMenu(), createAccountSpendingMenu()};
 		userInput = new Scanner(System.in);
 		cli = this;
 	}
@@ -440,9 +441,10 @@ public class ConsoleUI {
 						switch(inputCh) {
 						case '1':
 							ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_REVENUE_MENU);
-							break;
+							return true;
 						case '2':
-							break;
+						        ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_SPENDING_MENU);
+							return true;
 						case '3':
 							ConsoleUI.getCLI().setMenuById(MenuId.ENTER_MENU);
 							return true;
@@ -649,6 +651,65 @@ public class ConsoleUI {
 			}
 			
 		};
+	}
+	
+	private Menu createAccountSpendingMenu() {
+	    return new Menu(MenuId.ACCOUNT_SPENDING_MENU) {
+		
+		private boolean drawReport = false;
+
+		@Override
+		public void draw() {
+		    User user = ConsoleUI.getCLI().getCurrentUser();
+			drawHeader(user.getLogin());
+			System.out.format("Баланс: %.02f руб.\n\n", user.getBalance());
+			
+			if (drawReport) {
+				String[] categoryList = user.getOutcomeNames();
+				double totalCount = 0;
+				for (var cat : categoryList) {
+					CashCategory outcome =  user.getOutcomeByName(cat);
+					double value = outcome.getValue();
+					totalCount += value;
+					if ((int)(value * 100) > 0) {
+						System.out.format("%s : -%.02f руб.\n", outcome.getName(), value);
+					}
+				}
+				System.out.format("\nВсего расходов: -%.02f\n\n", totalCount);
+				drawReport = false;
+			}
+			
+			System.out.println("1. Отчёт.");
+			System.out.println("2. Потратить.");
+			System.out.println("3. Назад.\n");
+			System.out.format("Введите число соответствующее пункту меню: ");
+		}
+
+		@Override
+		public boolean input(Scanner inputSrc) {
+		    String input = inputSrc.next();
+			System.out.println();
+			if (input.length() == 1) {
+				char inputCh = input.charAt(0);
+				if (Character.isDigit(inputCh)) {
+					switch(inputCh) {
+					case '1':
+						drawReport = true;
+						return true;
+					case '2':
+						ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_WITHDRAWAL);
+						return true;
+					case '3':
+						ConsoleUI.getCLI().setMenuById(MenuId.ACCOUNT_MAIN_MENU);
+						return true;
+					}
+				}
+			}
+			System.out.println("Ошибка ввода!");
+			return true;
+		}
+		
+	    };
 	}
 
 }
